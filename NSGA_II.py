@@ -3,12 +3,12 @@ import numpy as np
 
 class NSGA_II(object):
 
-    def __init__(self, gen, pop_num, prob, yita, func):
+    def __init__(self, gen, pop_num, prob, yita, x_range):
 
         self.yita_c = yita_c   # the ditribution is narrow when yita_c is largeer
         self.yita_m = yita_m   # the parent and offspring are more different when yita_m is smaller
-        self.x_low = func[0]
-        self.x_up = func[1]
+        self.x_low = x_range[0]
+        self.x_up = x_range[1]
 
     def cross(self, parent1, parent2):
 

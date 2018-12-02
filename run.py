@@ -4,20 +4,20 @@ from test_func import choose_fun
 from NSGA_II import NSGA_II
 
 
-def run(pop, gen, pop_num, prob, yita):
+def run(pop, gen, x_range, pop_num, prob, yita):
 
-    NSGA = NSGA_II(gen, pop_num, prob, yita, func)
-    NSGA.fast_Usort()
-    NSGA.cal_Cdis()
+    NSGA = NSGA_II(gen, pop_num, prob, yita, x_range)
+    Usort = NSGA.fast_Usort()
+    dis = NSGA.cal_Cdis()
 
     for i in range(gen):
-        NSGA.select()
+        selected = NSGA.select()
         cross_pop = NSGA.cross()
         mut_pop = NSGA.mutation()
-        new_pop = NSGA.merge_all(population, cross_pop, mut_pop)
-        NSGA.fast_Usort()
-        NSGA.cal_Cdis()
-        NSGA.elitism()
+        new_pop = NSGA.merge_all(pop, cross_pop, mut_pop)
+        Usort = NSGA.fast_Usort()
+        dis = NSGA.cal_Cdis()
+        pop = NSGA.elitism()
 
 
 def init_population(pop_num, func):
@@ -39,7 +39,7 @@ def init_population(pop_num, func):
 
         population[i, :] = x_init
 
-    return population
+    return population,x_range
 
 
 def visualize():
@@ -59,5 +59,5 @@ if __name__ == "__main__":
     yita_m = 0.1
     yita = [yita_c, yita_m]
 
-    population = init_population(pop_num, 'DZT_1')
-    run(population,generation, pop_num, prob, yita)
+    population ,x_range= init_population(pop_num, 'DZT_1')
+    run(population,generation,x_range, pop_num, prob, yita)
