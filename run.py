@@ -4,17 +4,28 @@ from test_func import choose_fun
 from NSGA_II import NSGA_II
 
 
-def run(pop, gen, x_range, pop_num, prob, yita):
+def run(pop, gen, x_range, dim, pop_num, prob, yita, func):
 
     NSGA = NSGA_II(gen, pop_num, prob, yita, x_range)
-    Usort = NSGA.fast_Usort()
-    dis = NSGA.cal_Cdis()
+    values = np.empty((pop_num, dim))
+    values = choose_fun(func, var_in=pop)
+    Usort = NSGA.fast_Usort(values, dim)
+    rank_num = len(Usort)
+    distance = []
+    Usort_idx = []
+    for rn in range(rank_num):
+        dis, idx = NSGA.cal_Cdis(Usort[rn], values[:, Usort[rn]], dim)
+        distance.append(dis)
+        Usort_idx.append(idx)
 
     for i in range(gen):
         selected = NSGA.select()
         cross_pop = NSGA.cross()
         mut_pop = NSGA.mutation()
-        new_pop = NSGA.merge_all(pop, cross_pop, mut_pop)
+        # merge all
+        new_pop = np.vstack(pop, cross_pop)
+        new_pop = np.vstack(new_pop, mut_pop)
+
         Usort = NSGA.fast_Usort()
         dis = NSGA.cal_Cdis()
         pop = NSGA.elitism()
@@ -38,8 +49,13 @@ def init_population(pop_num, func):
             x_init = np.random.uniform(x_range[0], x_range[1], m)
 
         population[i, :] = x_init
+    
+    if func[:3] == 'DZT':
+        dim = 2
+    else:
+        dim = 3
 
-    return population,x_range
+    return population,x_range,dim
 
 
 def visualize():
@@ -49,7 +65,7 @@ def visualize():
 if __name__ == "__main__":
 
     generation = 300
-    pop_num = 100
+    pop_num = 20
 
     prob_c = 0.9
     prob_m = 0.1
@@ -59,5 +75,6 @@ if __name__ == "__main__":
     yita_m = 0.1
     yita = [yita_c, yita_m]
 
-    population ,x_range= init_population(pop_num, 'DZT_1')
-    run(population,generation,x_range, pop_num, prob, yita)
+    func= 'DZT_1'
+    population ,x_range,m= init_population(pop_num, func)
+    run(population,generation,x_range,dim, pop_num, prob, yita,func)

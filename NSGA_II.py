@@ -44,21 +44,103 @@ class NSGA_II(object):
                                 (1 - (self.x_up - parent) / (self.x_up - self.x_low)), 1 / (self.yita_m + 1))
         offspring = parent + epsq * (self.x_up - self.x_low)
 
-    def fast_Usort(self,):
-        pass
+    def fast_Usort(self, values, dim):
 
-    def cal_Cdis(self, value1, value2, front):
+        num = values.shape[0]
+        np = np.zeros([num])
+        sp = [[] for i in range(num)]
+        rank = np.zeros([num])
+        Usort = []
+        idx_sort = np.empty([dim, num])
+        F1 = []
+        for p in range(num):
+            for q in range(num):
 
-        front_num = len(front)
-        dis = np.zeros([front_num])
+                T = np.zeros([3])
+                for d in range(dim):
+                    if values[d][p] == values[d][q]:
+                        T[0] += 1
+                    elif values[d][p] < values[d][q]:
+                        T[1] += 1   # 被个体p支配的个体，比p的值要大（求最小值）
+                    else:
+                        T[2] += 1   # 支配p的个体，比p值小（求最小值）
+
+                if T[0] != dim:
+                    if T[0] + T[1] == dim:
+                        sp[p].append(q)  # 被个体p支配的个体，比p的值要大（求最小值）
+                    elif T[0] + T[2] == dim:
+                        np[p] += 1  # 支配p的个体，比p值小（求最小值）
+
+            if np[p] == 0:
+                rank[p] = 1
+
+            F1.append(p)
+
+        Usort.append(F1)
+
+        i = 0
+        while Usort[i] != []:
+            Q = []
+            for p in Usort[i]:
+                for q in sp[p]:
+                    if q not in Q:
+                        np[q] -= 1
+                        if np[q] == 0:
+                            # 该个体Pareto级别为当前最高级别加1。此时i初始值为0，所以要加2
+                            rank[q] = i + 2
+                            Q.append(q)
+            Usort.append(Q)
+            i += 1
+
+        return Usort
+
+    def cal_Cdis(self, Usort, values, dim):
+        'wrong'
+        num = len(Usort)
+        dis = np.zeros([num])
         dis[0], dis[-1] = np.inf, np.inf
-        ordered1 = np.argsort(value1)[:front_num]
-        ordered2 = np.argsort(value2)[:front_num]
+        'need test'
+        # idx = np.zeros([dim, num], dtype=np.int32)
+        # fmax = np.zeros([dim], dtype=np.int32)
+        # fmin = np.zeros([dim], dtype=np.int32)
+        # for d in range(dim):
+        #     fmax[d] = np.max(values[:, d])
+        #     fmin[d] = np.min(values[:, d])
+
+        idx = np.argsort(values[:, 0])
+        values_sort = values[idx, :]
+        Usort_idx = Usort[idx]
+        for i in range(1, num-1):  # min ,max
+            diff = 0
+            for d in range(dim):
+                diff += (values_sort[i+1, d] - values_sort[i-1, d]) / \
+                    (np.max(values[:, d])-np.min(values[:, d]))
+            dis[i] = diff
+
+        return dis, Usort_idx
+
+    def cal_Cdis_3(self, Usort, values, dim):
+
+        num = len(Usort)
+        dis = np.zeros([num])
+        # dis[0], dis[-1] = np.inf, np.inf
+        'need test'
+        idx = np.zeros([dim, num], dtype=np.int32)
+        fmax = np.zeros([dim], dtype=np.int32)
+        fmin = np.zeros([dim], dtype=np.int32)
+        for i in range(dim):
+            idx[i] = np.argsort(values[:, i])
+            fmax[i] = idx[i, -1]
+            fmin[i] = idx[i, 0]
+        for i in range(num):  # min ,max
+            diff = 0
+            for d in range(dim):
+                diff += None
+            dis[None] = diff
+
+        'edge tobe inf'
 
     def select(self,):
-        pass
-
-    def merge_all(self,):
         pass
 
     def elitism(self,):
