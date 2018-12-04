@@ -35,9 +35,12 @@ def ZDT_f1(infos, x):
         f = x[:, 0]
         g = 1 + np.sum(x[:, 1:], 1) / (m - 1)
         h = 1 - np.sqrt(f / g)
+        # fx = np.arange(x_range[0], x_range[1], 200)
+        # v_true = 1 - np.sqrt(fx / pof)
 
         output[:, 0] = f
         output[:, 1] = h
+        # output[:, 2] = v_true
 
         return output
 
@@ -51,12 +54,15 @@ def ZDT_f2(infos, x):
     if infos:
         return x_range, m
     else:
-        output = np.empty([len(x), 2])
+        output = np.empty([len(x), 3])
         f = x[:, 0]
         g = 1 + np.sum(x[:, 1:], 1) / (m - 1)
         h = 1 - np.square(f / g)
+        fx = np.arange(x_range[0], x_range[1], 200)
+        v_true = 1 - np.square(fx / pof)
         output[:, 0] = f
         output[:, 1] = h
+        output[:, 2] = v_true
 
         return output
 
@@ -70,13 +76,16 @@ def ZDT_f3(infos, x):
     if infos:
         return x_range, m
     else:
-        output = np.empty([len(x), 2])
+        output = np.empty([len(x), 3])
         f = x[:, 0]
         g = 1 + np.sum(x[:, 1:], 1) / (m - 1)
         h = 1 - np.sqrt(f / g) - np.sqrt(f / g) * np.sin(10 * np.pi * f)
+        fx = np.arange(x_range[0], x_range[1], 200)
+        v_true = h = 1 - np.sqrt(fx / pof) - \
+            np.sqrt(fx / pof) * np.sin(10 * np.pi * fx)
         output[:, 0] = f
         output[:, 1] = h
-
+        output[:, 2] = v_true
         return output
 
 
@@ -89,15 +98,17 @@ def ZDT_f4(infos, x):
     if infos:
         return x_range, m
     else:
-        output = np.empty([len(x), 2])
+        output = np.empty([len(x), 3])
         f = x[:, 0]
         g = 1 + 10 * \
             (m - 1) + np.sum(np.square(x[:, 1:]), 1) - \
             10 * np.sum(np.cos(4 * np.pi * x[:, 1:]), 1)
         h = 1 - np.sqrt(f / g)
+        fx = np.arange(x_range[0], x_range[1], 200)
+        v_true = 1-np.sqrt(fx/pof)
         output[:, 0] = f
         output[:, 1] = h
-
+        output[:, 2] = v_true
         return output
 
 
@@ -141,13 +152,15 @@ def ZDT_f6(infos, x):
     if infos:
         return x_range, m
     else:
-        output = np.empty([len(x), 2])
+        output = np.empty([len(x), 3])
         f = 1 - np.exp(-4 * x[:, 0]) * np.power(np.sin(6 * np.pi * x[:, 0]), 6)
         g = 1 + 9 * np.power(np.sum(x[:, 1:], 1)/(m-1), 0.25)
-        h = 1-np.square(f/g)
+        h = 1 - np.square(f / g)
+        fx = np.arange(x_range[0], x_range[1], 200)
+        v_true = 1-np.sqrt(fx/pof)
         output[:, 0] = f
         output[:, 1] = h
-
+        output[:, 2] = v_true
         return output
 
 # DTLZ

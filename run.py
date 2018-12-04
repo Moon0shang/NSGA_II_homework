@@ -26,8 +26,7 @@ def run(pop, gen, x_range, dim, prob, yita, func):
         pop = NSGA.elitism(new_pop, Usort, dis)
 
         # if i % 20 == 0:
-        print('----------------------------------------')
-        print('gen:%d' % i)
+        print('--------------------------------gen:%d-----------------------------' % i)
 
     visualize(func, pop, dim)
 
@@ -65,7 +64,10 @@ def visualize(func, pop, dim):
     values = choose_fun(func, var_in=pop)
 
     if dim == 2:
-        plt.scatter(values[:, 0], values[:, 1])
+        plt.scatter(values[:, 0], values[:, 1], color='b', marker='*')
+        fx = np.arange(0, 1, 0.005)
+        v_true = 1 - np.sqrt(fx / 1)
+        plt.scatter(fx, v_true, color='r', marker='o')
         plt.show()
 
 

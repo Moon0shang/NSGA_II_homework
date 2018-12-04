@@ -86,12 +86,14 @@ class NSGA_II(object):
                                        beta1 * (parent2[i] - parent1[i]))
                 offspring2[i] = 0.5 * (parent1[i] + parent2[i] +
                                        beta2 * (parent2[i] - parent1[i]))
-                if offspring1[i] < x_low or offspring1[i] > x_up:
+                # offspring1[i] < x_low or offspring1[i] > x_up:
+                if offspring1[i] > x_up*10:
                     print('cross 1 error! %.4f' % offspring1[i])
                     print('parent:%.4f,%.4f' % (parent1[i], parent2[i]))
                     print('beta:%.4f' % beta1)
                     time.sleep(0.1)
-                if offspring2[i] < x_low or offspring2[i] > x_up:
+                # offspring2[i] < x_low or offspring2[i] > x_up:
+                if offspring2[i] > x_up*10:
                     print('cross 2 error! %.4f' % offspring2[i])
                     print('parent:%.4f,%.4f' % (parent1[i], parent2[i]))
                     print('beta:%.4f' % beta2)
@@ -150,7 +152,8 @@ class NSGA_II(object):
 
             offspring[i] = parent[i] + epsq * (x_up - parent[i])
 
-            if offspring[i] < x_low or offspring[i] > x_up:
+            # offspring[i] < x_low or offspring[i] > x_up:
+            if offspring[i] > x_up*10:
                 print('mutate error! %.4f' % offspring[i])
                 print('parent:%.4f' % parent[i])
                 print('epsq:%.4f' % epsq)
