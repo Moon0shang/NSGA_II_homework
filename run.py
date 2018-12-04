@@ -1,5 +1,5 @@
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 from test_func import choose_fun
 from NSGA_II import NSGA_II
@@ -28,6 +28,8 @@ def run(pop, gen, x_range, dim, prob, yita, func):
         # if i % 20 == 0:
         print('----------------------------------------')
         print('gen:%d' % i)
+
+    visualize(func, pop, dim)
 
 
 def init_population(pop_num, func):
@@ -58,21 +60,26 @@ def init_population(pop_num, func):
     return population, x_range, dim
 
 
-def visualize():
-    pass
+def visualize(func, pop, dim):
+
+    values = choose_fun(func, var_in=pop)
+
+    if dim == 2:
+        plt.scatter(values[:, 0], values[:, 1])
+        plt.show()
 
 
 if __name__ == "__main__":
 
     generation = 300
-    pop_num = 20
+    pop_num = 100
 
     prob_c = 0.9
     prob_m = 0.1
     prob = [prob_c, prob_m]
 
     yita_c = 20
-    yita_m = 0.1
+    yita_m = 10
     yita = [yita_c, yita_m]
 
     func = ['ZDT_1', 'ZDT_2', 'ZDT_3', 'ZDT_4',

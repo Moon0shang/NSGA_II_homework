@@ -264,5 +264,5 @@ class NSGA_II(object):
 
             # next_pop = np.vstack((next_pop, new_pop[Usort[i], :]))
             next_pop[(num - len(stay_idx)):num, :] = new_pop[stay_idx, :]
-            print('stay:', stay_idx)
+            # print('stay:', stay_idx)
         return next_pop  # [1:, :]
