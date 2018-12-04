@@ -14,13 +14,13 @@ Fast Undominated Sorting &  calculate Crowding distance
 
 while generation:
 
-1. select parent population
+    select parent population
 
-2. cross & mutation generate offspring
+    cross & mutation generate offspring
 
-3. concatenate parent and offspring to a new popuation
+    concatenate parent and offspring to a new popuation
 
-4. Fast Undominated Sorting &  calculate Crowding distance
+    Fast Undominated Sorting &  calculate Crowding distance
 
-5. use Elitism preservation strategy to generate next population
+    use Elitism preservation strategy to generate next population
 
