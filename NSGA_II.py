@@ -9,8 +9,10 @@ class NSGA_II(object):
         self.yita_c = yita[0]
         # the parent and offspring are more different when yita_m is smaller
         self.yita_m = yita[1]
-        self.x_low = x_range[0]
-        self.x_up = x_range[1]
+        # cross and mutate probabilities
+        self.prob_c = prob[0]
+        self.prob_m = prob[1]
+        self.x_range = x_range
         self.pop_num = pop_num
 
     def select(self,):
@@ -19,15 +21,51 @@ class NSGA_II(object):
         return parent
 
     def cross(self, pop):
-        'TODO:add select the parent'
-        parent1 = None
-        parent2 = None
-        "deal with double x range"
-        alpha1 = 2 - np.power(1 + ((2 * (parent1 - self.x_low)) /
-                                   (parent2 - parent1)), -(self.yita_c + 1))
 
-        alpha2 = 2 - np.power(1 + ((2 * (self.x_up - parent2)) /
-                                   (parent2 - parent1)), -(self.yita_c + 1))
+        p = np.random.rand(pop.shape[0])
+        mating = pop[p < self.prob_c]
+        # shuffle the mating parent
+        np.random.shuffle(mating)
+        # force mat_l to be even to gen couples
+        mat_l = len(mating)
+        if mat_l == 0:
+            return None
+        elif mat_l % 2 != 0:
+            mating = mating[:-1]
+            mat_l -= 1
+
+        cross_pop = np.empty(mat_l, pop.shape[1])
+        for i in range(mat_l // 2):
+
+            parent1 = mating[2 * i]
+            parent2 = mating[2 * i + 1]
+
+            if len(pop) == 2:
+                offspring1, offspring2 = self.__single_cross(
+                    parent1, parent2, self.x_range)
+            else:
+                offspring1 = np.empty(parent1.shape)
+                offspring2 = np.empty(parent1.shape)
+                offspring1[0] = self.__single_cross(
+                    parent1[0], parent2[0], self.x_range[:2])
+                offspring1[1:] = self.__single_cross(
+                    parent1[1:], parent2[1:], self.x_range[2:])
+
+            cross_pop[2 * i, :] = offspring1
+            cross_pop[2 * i + 1, :] = offspring2
+
+        return cross_pop
+
+    def __single_cross(self, parent1, parent2, x_range):
+
+        x_low = x_range[0]
+        x_up = x_range[1]
+
+        alpha1 = 2 - np.power(1 + ((2 * (parent1 - x_low)) / (parent2 - parent1)),
+                              -(self.yita_c + 1))
+
+        alpha2 = 2 - np.power(1 + ((2 * (x_up - parent2)) / (parent2 - parent1)),
+                              -(self.yita_c + 1))
 
         p = np.random.rand()
 
@@ -50,16 +88,37 @@ class NSGA_II(object):
 
     def mutation(self, pop):
         'TODO:add select the parent'
-        parent = None
+        p = np.random.rand(pop.shape[0])
+        mutate = pop[p < self.prob_m]
+
+        mut_pop = np.empty(mutate.shape)
+        for i, parent in enumerate(mutate):
+
+            if len(self.x_range) == 2:
+                offspring = self.__single_mu(parent, self.x_range)
+            else:
+                offspring = np.empty(parent.shape)
+                offspring[0] = self.__single_mu(parent[0], self.x_range[:2])
+                offspring[1:] = self.__single_mu(parent[1:], self.x_range[2:])
+
+            mut_pop[i, :] = offspring
+
+        return mut_pop
+
+    def __single_mu(self, parent, x_range):
+
+        x_low = x_range[0]
+        x_up = x_range[1]
+
         p = np.random.rand()
-        "deal with double x range"
         if p <= 0.5:
-            epsq = np.power(2 * p + (1 - 2 * p) * (1 - (parent -
-                                                        self.x_low) / (self.x_up - self.x_low)), 1 / (self.yita_m + 1))
+            epsq = np.power(2 * p + (1 - 2 * p) * (1 - (parent - x_low) / (x_up - x_low)),
+                            1 / (self.yita_m + 1))
         else:
-            epsq = 1 - np.power(2 * (1 - p) + 2 * (p - 0.5) *
-                                (1 - (self.x_up - parent) / (self.x_up - self.x_low)), 1 / (self.yita_m + 1))
-        offspring = parent + epsq * (self.x_up - self.x_low)
+            epsq = 1 - np.power(2 * (1 - p) + 2 * (p - 0.5) * (1 - (x_up - parent) / (x_up - x_low)),
+                                1 / (self.yita_m + 1))
+
+        offspring = parent + epsq * (x_up - x_low)
 
         return offspring
 
@@ -77,9 +136,9 @@ class NSGA_II(object):
 
                 T = np.zeros([3])
                 for d in range(dim):
-                    if values[d][p] == values[d][q]:
+                    if values[p, d] == values[q, d]:
                         T[0] += 1
-                    elif values[d][p] < values[d][q]:
+                    elif values[p, d] < values[q, d]:
                         T[1] += 1   # 被个体p支配的个体，比p的值要大（求最小值）
                     else:
                         T[2] += 1   # 支配p的个体，比p值小（求最小值）
@@ -108,6 +167,7 @@ class NSGA_II(object):
                             # 该个体Pareto级别为当前最高级别加1。此时i初始值为0，所以要加2
                             rank[q] = i + 2
                             Q.append(q)
+
             Usort.append(Q)
             i += 1
 
