@@ -45,7 +45,7 @@ def init_population(pop_num, func):
 
         population[i, :] = x_init
 
-    if func[:3] == 'DZT':
+    if func[:3] == 'ZDT':
         dim = 2
     else:
         dim = 3

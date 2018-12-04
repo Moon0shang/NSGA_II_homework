@@ -15,10 +15,10 @@ class NSGA_II(object):
         self.x_range = x_range
         self.pop_num = pop_num
 
-    def select(self,):
-        'choose the one to cross'
-        parent = None
-        return parent
+    # def select(self,):
+    #     'choose the one to cross'
+    #     parent = None
+    #     return parent
 
     def cross(self, pop):
 
@@ -122,6 +122,19 @@ class NSGA_II(object):
 
         return offspring
 
+    def dis_sort(self, values, dim):
+
+        Usort = self.__fast_Usort(values, dim)
+        rank_num = len(Usort)
+        distance = []
+        # Usort_idx = []
+        for rn in range(rank_num):
+            Usort_num = len(Usort[rn])
+            dis = self.__cal_Cdis(Usort_num, values[Usort[rn], :], dim)
+            distance.append(dis)
+
+        return Usort, distance
+
     def __fast_Usort(self, values, dim):
 
         num = values.shape[0]
@@ -177,36 +190,23 @@ class NSGA_II(object):
         'need test'
         # num = len(Usort)
         dis = np.zeros([num])
-        sort_idx = np.zeros([dim, num], dtype=np.int32)
-        dis_dim = np.empty([dim, num])
+        sort_idx = np.zeros([num, dim], dtype=np.int32)
+        dis_dim = np.empty([num, dim])
 
         for d in range(dim):
-            sort_idx[d] = np.argsort(values[:, d])
-            dis_dim[d][sort_idx[d][0]] = np.inf
-            dis_dim[d][sort_idx[d][-1]] = np.inf
+            sort_idx[:, d] = np.argsort(values[:, d])
+            dis_dim[sort_idx[0][d]][d] = np.inf
+            dis_dim[sort_idx[-1][d]][d] = np.inf
 
             for i in range(1, num - 1):
-                dis_dim[d][sort_idx[d][i]] = (values[sort_idx[d][i - 1], d] - values[sort_idx[d][i + 1], d]) / (
+                dis_dim[sort_idx[i][d]][d] = (values[sort_idx[i - 1][d], d] - values[sort_idx[i + 1][d], d]) / (
                     np.max(values[:, d]) - np.min(values[:, d]))
 
         for i in range(num):
             for d in range(dim):
-                dis[i] += dis_dim[d][i]
+                dis[i] += dis_dim[i][d]
 
         return dis
-
-    def dis_sort(self, values, dim):
-
-        Usort = self.__fast_Usort(values, dim)
-        rank_num = len(Usort)
-        distance = []
-        Usort_idx = []
-        for rn in range(rank_num):
-            Usort_num = len(Usort[rn])
-            dis = self.__cal_Cdis(Usort_num, values[:, Usort[rn]], dim)
-            distance.append(dis)
-
-        return Usort, distance
 
     def elitism(self, new_pop, Usort, dis):
 
