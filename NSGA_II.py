@@ -1,4 +1,5 @@
 import numpy as np
+import time
 
 
 class NSGA_II(object):
@@ -34,22 +35,14 @@ class NSGA_II(object):
             mating = mating[:-1]
             mat_l -= 1
 
-        cross_pop = np.empty(mat_l, pop.shape[1])
+        cross_pop = np.empty([mat_l, pop.shape[1]])
         for i in range(mat_l // 2):
 
             parent1 = mating[2 * i]
             parent2 = mating[2 * i + 1]
 
-            if len(pop) == 2:
-                offspring1, offspring2 = self.__single_cross(
-                    parent1, parent2, self.x_range)
-            else:
-                offspring1 = np.empty(parent1.shape)
-                offspring2 = np.empty(parent1.shape)
-                offspring1[0] = self.__single_cross(
-                    parent1[0], parent2[0], self.x_range[:2])
-                offspring1[1:] = self.__single_cross(
-                    parent1[1:], parent2[1:], self.x_range[2:])
+            offspring1, offspring2 = self.__single_cross(
+                parent1, parent2, self.x_range)
 
             cross_pop[2 * i, :] = offspring1
             cross_pop[2 * i + 1, :] = offspring2
@@ -61,28 +54,63 @@ class NSGA_II(object):
         x_low = x_range[0]
         x_up = x_range[1]
 
-        alpha1 = 2 - np.power(1 + ((2 * (parent1 - x_low)) / (parent2 - parent1)),
-                              -(self.yita_c + 1))
+        offspring1 = np.empty(parent1.shape)
+        offspring2 = np.zeros(parent2.shape)
+        for i in range(len(parent1)):
+            if parent1[i] == parent2[i]:
+                offspring1[i] = parent1[i]
+                offspring2[i] = parent1[i]
+                # print(offspring2[i], i)
+            else:
+                if parent1[i] > parent2[i]:
+                    parent1[i], parent2[i] = parent2[i], parent1[i]
 
-        alpha2 = 2 - np.power(1 + ((2 * (x_up - parent2)) / (parent2 - parent1)),
-                              -(self.yita_c + 1))
+                if len(self.x_range) == 2:
+                    x_low = self.x_range[0]
+                    x_up = self.x_range[1]
+                else:
+                    if i > 0:
+                        x_low = self.x_range[3]
+                        x_up = self.x_range[4]
 
-        p = np.random.rand()
+                alpha1 = 2 - np.power(1 + ((2 * (parent1[i] - x_low)) / (parent2[i] - parent1[i])),
+                                      -(self.yita_c + 1))
 
-        beta1 = self.__get_beta(alpha1, p)
-        beta2 = self.__get_beta(alpha2, p)
+                alpha2 = 2 - np.power(1 + ((2 * (x_up - parent2[i])) / (parent2[i] - parent1[i])),
+                                      -(self.yita_c + 1))
 
-        offspring1 = 0.5 * (parent1 + parent2 - beta1 * (parent2 - parent1))
-        offspring2 = 0.5 * (parent1 + parent2 + beta1 * (parent2 - parent1))
+                beta1 = self.__get_beta(alpha1)
+                beta2 = self.__get_beta(alpha2)
 
+                offspring1[i] = 0.5 * (parent1[i] + parent2[i] -
+                                       beta1 * (parent2[i] - parent1[i]))
+                offspring2[i] = 0.5 * (parent1[i] + parent2[i] +
+                                       beta2 * (parent2[i] - parent1[i]))
+                if offspring1[i] < x_low or offspring1[i] > x_up:
+                    print('cross 1 error! %.4f' % offspring1[i])
+                    print('parent:%.4f,%.4f' % (parent1[i], parent2[i]))
+                    print('beta:%.4f' % beta1)
+                    time.sleep(0.1)
+                if offspring2[i] < x_low or offspring2[i] > x_up:
+                    print('cross 2 error! %.4f' % offspring2[i])
+                    print('parent:%.4f,%.4f' % (parent1[i], parent2[i]))
+                    print('beta:%.4f' % beta2)
+                    time.sleep(0.1)
+                # print(offspring2[i], i)
+
+        # print(offspring2)
         return offspring1, offspring2
 
-    def __get_beta(self, alpha, p):
+    def __get_beta(self, alpha):
+
+        p = np.random.rand()
 
         if p < 1 / alpha:
             beta = np.power(p * alpha, 1 / (self.yita_c + 1))
         else:
             beta = np.power(1 / (2 - p * alpha), 1 / (self.yita_c + 1))
+            # print(alpha, beta)
+            # time.sleep(0.02)
 
         return beta
 
@@ -94,31 +122,39 @@ class NSGA_II(object):
         mut_pop = np.empty(mutate.shape)
         for i, parent in enumerate(mutate):
 
-            if len(self.x_range) == 2:
-                offspring = self.__single_mu(parent, self.x_range)
-            else:
-                offspring = np.empty(parent.shape)
-                offspring[0] = self.__single_mu(parent[0], self.x_range[:2])
-                offspring[1:] = self.__single_mu(parent[1:], self.x_range[2:])
-
+            offspring = self.__single_mu(parent)
             mut_pop[i, :] = offspring
 
         return mut_pop
 
-    def __single_mu(self, parent, x_range):
+    def __single_mu(self, parent):
+        'need modify'
+        offspring = np.empty(parent.shape)
+        for i in range(len(parent)):
 
-        x_low = x_range[0]
-        x_up = x_range[1]
+            if len(self.x_range) == 2:
+                x_low = self.x_range[0]
+                x_up = self.x_range[1]
+            else:
+                if i > 0:
+                    x_low = self.x_range[3]
+                    x_up = self.x_range[4]
 
-        p = np.random.rand()
-        if p <= 0.5:
-            epsq = np.power(2 * p + (1 - 2 * p) * (1 - (parent - x_low) / (x_up - x_low)),
-                            1 / (self.yita_m + 1))
-        else:
-            epsq = 1 - np.power(2 * (1 - p) + 2 * (p - 0.5) * (1 - (x_up - parent) / (x_up - x_low)),
+            p = np.random.rand()
+            if p <= 0.5:
+                epsq = np.power(2 * p + (1 - 2 * p) * (1 - (parent[i] - x_low) / (x_up - x_low)),
                                 1 / (self.yita_m + 1))
+            else:
+                epsq = 1 - np.power(2 * (1 - p) + 2 * (p - 0.5) * (1 - (x_up - parent[i]) / (x_up - x_low)),
+                                    1 / (self.yita_m + 1))
 
-        offspring = parent + epsq * (x_up - x_low)
+            offspring[i] = parent[i] + epsq * (x_up - parent[i])
+
+            if offspring[i] < x_low or offspring[i] > x_up:
+                print('mutate error! %.4f' % offspring[i])
+                print('parent:%.4f' % parent[i])
+                print('epsq:%.4f' % epsq)
+                time.sleep(0.1)
 
         return offspring
 
@@ -138,9 +174,9 @@ class NSGA_II(object):
     def __fast_Usort(self, values, dim):
 
         num = values.shape[0]
-        pn = np.zeros([num])
-        sp = [[] for i in range(num)]
-        rank = np.zeros([num], dtype=np.int32)
+        n_p = np.zeros([num])   # dominate p
+        s_p = [[] for i in range(num)]  # be dominated by p
+        # rank = np.zeros([num], dtype=np.int32)
         F1 = []
         Usort = []
 
@@ -158,14 +194,13 @@ class NSGA_II(object):
 
                 if T[0] != dim:
                     if T[0] + T[1] == dim:
-                        sp[p].append(q)  # 被个体p支配的个体，比p的值要大（求最小值）
+                        s_p[p].append(q)  # 被个体p支配的个体，比p的值要大（求最小值）
                     elif T[0] + T[2] == dim:
-                        pn[p] += 1  # 支配p的个体，比p值小（求最小值）
+                        n_p[p] += 1  # 支配p的个体，比p值小（求最小值）
 
-            if pn[p] == 0:
-                rank[p] = 1
-
-            F1.append(p)
+            if n_p[p] == 0:
+                # rank[p] = 1
+                F1.append(p)
 
         Usort.append(F1)
 
@@ -173,18 +208,18 @@ class NSGA_II(object):
         while Usort[i] != []:
             Q = []
             for p in Usort[i]:
-                for q in sp[p]:
-                    if q not in Q:
-                        pn[q] -= 1
-                        if pn[q] == 0:
-                            # 该个体Pareto级别为当前最高级别加1。此时i初始值为0，所以要加2
-                            rank[q] = i + 2
-                            Q.append(q)
+                for q in s_p[p]:
+                    # if q not in Q:
+                    n_p[q] -= 1
+                    if n_p[q] == 0:
+                        # 该个体Pareto级别为当前最高级别加1。此时i初始值为0，所以要加2
+                        # rank[q] = i + 2
+                        Q.append(q)
 
             Usort.append(Q)
             i += 1
 
-        return Usort
+        return Usort[:-1]  # , rank
 
     def __cal_Cdis(self, num, values, dim):
         'need test'
@@ -211,7 +246,7 @@ class NSGA_II(object):
     def elitism(self, new_pop, Usort, dis):
 
         num = 0
-        next_pop = np.empty(self.pop_num, new_pop.shape[1])
+        next_pop = np.empty([self.pop_num, new_pop.shape[1]])
 
         for i in range(len(Usort)):
             num += len(Usort[i])
@@ -220,9 +255,14 @@ class NSGA_II(object):
                 idx = np.argsort(dis[i])
                 diff = num - self.pop_num
                 stay = idx[:diff]
-                Usort = Usort[stay]
+                stay_idx = []
+                for s in stay:
+                    stay_idx.append(Usort[i][s])
                 num = self.pop_num
+            else:
+                stay_idx = Usort[i]
 
-            next_pop[(num - len(Usort)):num, :] = new_pop[Usort, :]
-
-        return next_pop
+            # next_pop = np.vstack((next_pop, new_pop[Usort[i], :]))
+            next_pop[(num - len(stay_idx)):num, :] = new_pop[stay_idx, :]
+            print('stay:', stay_idx)
+        return next_pop  # [1:, :]

@@ -1,5 +1,6 @@
 import numpy as np
 
+
 from test_func import choose_fun
 from NSGA_II import NSGA_II
 
@@ -20,9 +21,13 @@ def run(pop, gen, x_range, dim, prob, yita, func):
         new_pop = np.vstack((new_pop, mut_pop))
 
         # values = np.empty((pop_num, dim))
-        values = choose_fun(func, var_in=pop)
+        values = choose_fun(func, var_in=new_pop)
         Usort, dis = NSGA.dis_sort(values, dim)
         pop = NSGA.elitism(new_pop, Usort, dis)
+
+        # if i % 20 == 0:
+        print('----------------------------------------')
+        print('gen:%d' % i)
 
 
 def init_population(pop_num, func):
@@ -66,7 +71,7 @@ if __name__ == "__main__":
     prob_m = 0.1
     prob = [prob_c, prob_m]
 
-    yita_c = 0.1
+    yita_c = 20
     yita_m = 0.1
     yita = [yita_c, yita_m]
 
