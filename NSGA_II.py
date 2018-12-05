@@ -20,6 +20,13 @@ class NSGA_II(object):
     #     'choose the one to cross'
     #     parent = None
     #     return parent
+    def cross_mutate(self, pop):
+        cr_pop = self.cross(pop)
+        new_pop = np.vstack((cr_pop, pop))
+        mut_pop = self.mutation(pop)
+        new_pop = np.vstack((new_pop, mut_pop))
+
+        return new_pop
 
     def cross(self, pop):
 
@@ -250,7 +257,7 @@ class NSGA_II(object):
         'need test'
         # num = len(Usort)
         dis = np.zeros([num])
-        sort_idx = np.zeros([num, dim], dtype=np.int32)
+        sort_idx = np.zeros([num, dim], dtype=np.int)
         dis_dim = np.empty([num, dim])
 
         for d in range(dim):
@@ -275,7 +282,7 @@ class NSGA_II(object):
 
         for i in range(len(Usort)):
             num += len(Usort[i])
-
+            num_debug = num
             if num > self.pop_num:
                 idx = np.argsort(dis[i])
                 diff = num - self.pop_num
@@ -284,7 +291,16 @@ class NSGA_II(object):
                 for s in stay:
                     stay_idx.append(Usort[i][s])
                 num = self.pop_num
-                next_pop[(num - len(stay_idx)):num, :] = new_pop[stay_idx, :]
+                try:
+                    next_pop[(num - len(stay_idx)):num,
+                             :] = new_pop[stay_idx, :]
+                except:
+                    print('length:', len(stay_idx))
+                    print('diff:%d\tnum:%d\tpop:%d\tnew:%d' %
+                          (diff, num_debug,  self.pop_num, len(new_pop)))
+                    next_pop[(num - len(stay_idx)):num,
+                             :] = new_pop[stay_idx, :]
+
                 break
             else:
                 stay_idx = Usort[i]

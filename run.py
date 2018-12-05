@@ -23,8 +23,7 @@ def run(pop, gen, x_range, dim, prob, yita, func):
 
         find_err(mut_pop, 'mutate')
 
-        new_pop = np.vstack((pop, cross_pop))
-        new_pop = np.vstack((new_pop, mut_pop))
+        new_pop = NSGA.cross_mutate(pop)
 
         find_err(new_pop, 'stack')
 
