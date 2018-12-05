@@ -16,40 +16,55 @@ def run(pop, gen, x_range, dim, prob, yita, func):
     for i in range(gen):
         # selected = NSGA.select()
         cross_pop = NSGA.cross(pop)
-        new_pop = np.vstack((pop, cross_pop))
+
+        find_err(cross_pop, 'cross')
+
         mut_pop = NSGA.mutation(pop)
+
+        find_err(mut_pop, 'mutate')
+
+        new_pop = np.vstack((pop, cross_pop))
         new_pop = np.vstack((new_pop, mut_pop))
+
+        find_err(new_pop, 'stack')
 
         # values = np.empty((pop_num, dim))
         values = choose_fun(func, var_in=new_pop)
         Usort, dis = NSGA.dis_sort(values, dim)
         pop = NSGA.elitism(new_pop, Usort, dis)
-
-        # if i % 20 == 0:
+        find_err(pop, 'elitism')
+        # if i % 10 == 0:
+        #     print('debug')
         print('--------------------------------gen:%d-----------------------------' % i)
 
     visualize(func, pop, dim)
 
 
+def find_err(pop, explain):
+
+    jug = np.zeros(pop.shape)
+    jug[pop > 1] = 1
+    jug[pop < 0] = 1
+    a1 = np.sum(jug, 1)
+    a2 = np.sum(jug)
+    if a2 > 0:
+        print('*****************%s errors*************************' % explain)
+
+
 def init_population(pop_num, func):
 
     x_range, m = choose_fun(func, infos=True)
+
     population = np.empty([pop_num, m])
-
-    for i in range(pop_num):
-        x_init = np.empty([m])
-        if len(x_range) != 2:
-            # if func == 'DZT_5':
-            #     x_init[0] = np.random.randint(x_range[0], x_range[1], 1)
-            #     x_init[1:] = np.random.randint(
-            #         x_range[3], x_range[4], m - 1)
-            # else:
-            x_init[0] = np.random.uniform(x_range[0], x_range[1], 1)
-            x_init[1:] = np.random.uniform(x_range[0], x_range[1], m - 1)
-        else:
-            x_init = np.random.uniform(x_range[0], x_range[1], m)
-
-        population[i, :] = x_init
+    if len(x_range) == 2:
+        population = np.random.uniform(x_range[0], x_range[1], [pop_num, m])
+    elif len(x_range) == 4:
+        population[:, 0] = np.random.uniform(
+            x_range[0], x_range[1], [pop_num, 1])
+        population[:, 1:] = np.random.uniform(
+            x_range[2], x_range[3], [pop_num, m - 1])
+    else:
+        print('wrong x range!')
 
     if func[:3] == 'ZDT':
         dim = 2
@@ -66,8 +81,8 @@ def visualize(func, pop, dim):
     if dim == 2:
         plt.scatter(values[:, 0], values[:, 1], color='b', marker='*')
         fx = np.arange(0, 1, 0.005)
-        v_true = 1 - np.sqrt(fx / 1)
-        plt.scatter(fx, v_true, color='r', marker='o')
+        v_true = np.multiply(1, 1 - np.sqrt(fx / 1))
+        plt.scatter(fx, v_true, color='r', marker='.')
         plt.show()
 
 
@@ -81,7 +96,7 @@ if __name__ == "__main__":
     prob = [prob_c, prob_m]
 
     yita_c = 20
-    yita_m = 10
+    yita_m = 20
     yita = [yita_c, yita_m]
 
     func = ['ZDT_1', 'ZDT_2', 'ZDT_3', 'ZDT_4',

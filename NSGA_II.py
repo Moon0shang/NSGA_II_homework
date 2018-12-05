@@ -86,18 +86,27 @@ class NSGA_II(object):
                                        beta1 * (parent2[i] - parent1[i]))
                 offspring2[i] = 0.5 * (parent1[i] + parent2[i] +
                                        beta2 * (parent2[i] - parent1[i]))
-                # offspring1[i] < x_low or offspring1[i] > x_up:
-                if offspring1[i] > x_up*10:
-                    print('cross 1 error! %.4f' % offspring1[i])
-                    print('parent:%.4f,%.4f' % (parent1[i], parent2[i]))
-                    print('beta:%.4f' % beta1)
-                    time.sleep(0.1)
-                # offspring2[i] < x_low or offspring2[i] > x_up:
-                if offspring2[i] > x_up*10:
-                    print('cross 2 error! %.4f' % offspring2[i])
-                    print('parent:%.4f,%.4f' % (parent1[i], parent2[i]))
-                    print('beta:%.4f' % beta2)
-                    time.sleep(0.1)
+
+                # if offspring1[i] < x_low:
+                #     offspring1[i] = x_low
+                # elif offspring1[i] > x_up:
+                #     offspring1[i] = x_up
+                # if offspring2[i] < x_low:
+                #     offspring2[i] = x_low
+                # elif offspring2[i] > x_up:
+                #     offspring2[i] = x_up
+                # if parent1[i] < x_low or parent1[i] > x_up:
+                #     # if offspring1[i] > x_up*10:
+                #     #print('cross 1 error! %.4f' % offspring1[i])
+                #     print('parent:%.4f,%.4f' % (parent1[i], parent2[i]))
+                #     print('beta:%.4f' % beta1)
+                #     time.sleep(0.1)
+                # if parent2[i] < x_low or parent2[i] > x_up:
+                #     # if offspring2[i] > x_up*10:
+                #     print('cross 2 error! %.4f' % offspring2[i])
+                #     print('parent:%.4f,%.4f' % (parent1[i], parent2[i]))
+                #     print('beta:%.4f' % beta2)
+                #     time.sleep(0.1)
                 # print(offspring2[i], i)
 
         # print(offspring2)
@@ -143,21 +152,34 @@ class NSGA_II(object):
                     x_up = self.x_range[4]
 
             p = np.random.rand()
+
             if p <= 0.5:
-                epsq = np.power(2 * p + (1 - 2 * p) * (1 - (parent[i] - x_low) / (x_up - x_low)),
-                                1 / (self.yita_m + 1))
+                delta = np.power(2 * p, 1 / (self.yita_m + 1)) - 1
             else:
-                epsq = 1 - np.power(2 * (1 - p) + 2 * (p - 0.5) * (1 - (x_up - parent[i]) / (x_up - x_low)),
-                                    1 / (self.yita_m + 1))
+                delta = 1 - np.power(2 * (1 - p), 1 / (self.yita_m + 1))
 
-            offspring[i] = parent[i] + epsq * (x_up - parent[i])
+            offspring[i] = parent[i] + delta
 
-            # offspring[i] < x_low or offspring[i] > x_up:
-            if offspring[i] > x_up*10:
-                print('mutate error! %.4f' % offspring[i])
-                print('parent:%.4f' % parent[i])
-                print('epsq:%.4f' % epsq)
-                time.sleep(0.1)
+            if offspring[i] < x_low:
+                offspring[i] = x_low
+            elif offspring[i] > x_up:
+                offspring[i] = x_up
+
+            # if p <= 0.5:
+            #     epsq = np.power(2 * p + (1 - 2 * p) * (1 - (parent[i] - x_low) / (x_up - x_low)),
+            #                     1 / (self.yita_m + 1))-1
+            # else:
+            #     epsq = 1 - np.power(2 * (1 - p) + 2 * (p - 0.5) * (1 - (x_up - parent[i]) / (x_up - x_low)),
+            #                         1 / (self.yita_m + 1))
+
+            # offspring[i] = parent[i] + epsq * (x_up - parent[i])
+
+            # if parent[i] < x_low or parent[i] > x_up:
+            #     # if offspring[i] > x_up*10:
+            #     # print('mutate error! %.4f' % offspring[i])
+            #     print('parent:%.4f' % parent[i])
+            #     print('epsq:%.4f' % delta)
+            #     time.sleep(0.1)
 
         return offspring
 
@@ -249,7 +271,7 @@ class NSGA_II(object):
     def elitism(self, new_pop, Usort, dis):
 
         num = 0
-        next_pop = np.empty([self.pop_num, new_pop.shape[1]])
+        next_pop = np.ones([self.pop_num, new_pop.shape[1]])
 
         for i in range(len(Usort)):
             num += len(Usort[i])
@@ -257,15 +279,18 @@ class NSGA_II(object):
             if num > self.pop_num:
                 idx = np.argsort(dis[i])
                 diff = num - self.pop_num
-                stay = idx[:diff]
+                stay = idx[-diff:]
                 stay_idx = []
                 for s in stay:
                     stay_idx.append(Usort[i][s])
                 num = self.pop_num
+                next_pop[(num - len(stay_idx)):num, :] = new_pop[stay_idx, :]
+                break
             else:
                 stay_idx = Usort[i]
+                next_pop[(num - len(stay_idx)):num, :] = new_pop[stay_idx, :]
 
             # next_pop = np.vstack((next_pop, new_pop[Usort[i], :]))
-            next_pop[(num - len(stay_idx)):num, :] = new_pop[stay_idx, :]
+
             # print('stay:', stay_idx)
         return next_pop  # [1:, :]

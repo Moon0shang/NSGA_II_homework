@@ -33,11 +33,14 @@ def ZDT_f1(infos, x):
     else:
         output = np.empty([len(x), 2])
         f = x[:, 0]
-        g = 1 + np.sum(x[:, 1:], 1) / (m - 1)
+        g = 1 + 9 * np.sum(x[:, 1:], 1) / (m - 1)
         h = 1 - np.sqrt(f / g)
-        # fx = np.arange(x_range[0], x_range[1], 200)
-        # v_true = 1 - np.sqrt(fx / pof)
-
+        # # fx = np.arange(x_range[0], x_range[1], 200)
+        # # v_true = 1 - np.sqrt(fx / pof)
+        # for i in range(len(x)):
+        #     output[i, 0] = x[i, 0]
+        #     g = 1 + 9 * np.sum(x[i, 1:]) / (m - 1)
+        #     output[i, 1] = 1-np.sqrt(output[i, 0]/g)
         output[:, 0] = f
         output[:, 1] = h
         # output[:, 2] = v_true
@@ -56,7 +59,7 @@ def ZDT_f2(infos, x):
     else:
         output = np.empty([len(x), 3])
         f = x[:, 0]
-        g = 1 + np.sum(x[:, 1:], 1) / (m - 1)
+        g = 1 + 9 * np.sum(x[:, 1:], 1) / (m - 1)
         h = 1 - np.square(f / g)
         fx = np.arange(x_range[0], x_range[1], 200)
         v_true = 1 - np.square(fx / pof)
@@ -78,7 +81,7 @@ def ZDT_f3(infos, x):
     else:
         output = np.empty([len(x), 3])
         f = x[:, 0]
-        g = 1 + np.sum(x[:, 1:], 1) / (m - 1)
+        g = 1 + 9 * np.sum(x[:, 1:], 1) / (m - 1)
         h = 1 - np.sqrt(f / g) - np.sqrt(f / g) * np.sin(10 * np.pi * f)
         fx = np.arange(x_range[0], x_range[1], 200)
         v_true = h = 1 - np.sqrt(fx / pof) - \
