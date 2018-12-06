@@ -11,33 +11,40 @@ def run(pop, gen, x_range, dim, prob, yita, func):
     pop_num = pop.shape[0]
     NSGA = NSGA_II(pop_num, prob, yita, x_range)
     # values = np.empty((pop_num, dim))
-    values = choose_fun(func, var_in=pop)
 
-    Usort, dis = NSGA.dis_sort(values, dim)
+    plt.ion()
     for i in range(gen):
-        # selected = NSGA.select()
-        # cross_pop = NSGA.cross(pop)
 
-        # find_err(cross_pop, 'cross')
+        values = choose_fun(func, var_in=pop)
+        Usort, dis, rank = NSGA.dis_sort(values, dim)
+        parent = NSGA.select(pop, dis, rank)
+        cross_pop = NSGA.cross(parent)
 
-        # mut_pop = NSGA.mutation(pop)
+        find_err(cross_pop, 'cross')
 
-        # find_err(mut_pop, 'mutate')
+        mut_pop = NSGA.mutation(parent)
 
-        new_pop = NSGA.cross_mutate(pop)
+        find_err(mut_pop, 'mutate')
 
-        find_err(new_pop, 'stack-cross-mutate')
+        new1 = np.vstack((cross_pop, pop))
+        new_pop = np.vstack((mut_pop, new1))
+
+        # new_pop = NSGA.cross_mutate(parent)
+
+        find_err(new_pop, 'stack')
 
         # values = np.empty((pop_num, dim))
         values = choose_fun(func, var_in=new_pop)
-        Usort, dis = NSGA.dis_sort(values, dim)
+        Usort, dis, rank = NSGA.dis_sort(values, dim)
         pop = NSGA.elitism(new_pop, Usort, dis)
         find_err(pop, 'elitism')
         # if i % 10 == 0:
         #     print('debug')
         print('--------------------------------gen:%d-----------------------------' % i)
 
-    visualize(func, pop, dim)
+        visualize(func, pop, dim)
+    plt.ioff()
+    plt.show()
 
 
 def find_err(pop, explain):
@@ -82,15 +89,18 @@ def visualize(func, pop, dim):
     # print(len(pop))
 
     if dim == 2:
+        # plt.close()
+        plt.cla()
         plt.scatter(values[:, 0], values[:, 1], color='g', marker='o')
+        plt.pause(0.5)
 
-        plt.scatter(fx, best, color='r', marker='.')
-        plt.show()
+        # plt.scatter(fx, best, color='r', marker='.')
+        # plt.show()
 
 
 if __name__ == "__main__":
 
-    generation = 150
+    generation = 100
     pop_num = 100
 
     prob_c = 0.9

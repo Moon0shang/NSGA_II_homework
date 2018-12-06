@@ -16,50 +16,92 @@ class NSGA_II(object):
         self.x_range = x_range
         self.pop_num = pop_num
 
-    # def select(self,pop,Usort,dis,prob):
-    #     'choose the one to cross'
-    #     p = np.random.rand([pop.shape[0]])
-    #     pnum = np.zeros(len(p))
-    #     pnum[p < prob] = 1
-    #     num = np.sum(pnum)
-    #     parent = None
-    #     return parent
+    def select(self, pop,  dis, rank):
+        'choose the one to cross'
+        pnum = len(pop)
+        pool_size = pnum//2
+        if pool_size % 2 != 0:
+            pool_size += 1
 
-    def cross_mutate(self, pop):
-        cr_pop = self.cross(pop)
-        new_pop = np.vstack((cr_pop, pop))
-        mut_pop = self.mutation(pop)
-        new_pop = np.vstack((new_pop, mut_pop))
+        parent = np.empty([pool_size, pop.shape[1]])
+        for i in range(pool_size):
+            candidate = np.zeros([2], dtype=np.int32)
+            for j in range(2):
+                candidate[j] = np.round(
+                    np.random.random() * pnum).astype(np.int32)
+                if candidate[j] < 1:
+                    candidate[j] = 1
 
-        return new_pop
+            while candidate[0] == candidate[1]:
+                candidate[1] = np.round(
+                    np.random.random() * pnum).astype(np.int32)
+                if candidate[1] < 1:
+                    candidate[1] = 1
+
+            if rank[candidate[0]] == rank[candidate[1]]:
+                pos1 = self.find_pos(rank, candidate[0])
+                pos2 = self.find_pos(rank, candidate[1])
+                if dis[pos1[0]][pos1[1]] >= dis[pos2[0]][pos2[1]]:
+                    parent[i, :] = pop[candidate[0], :]
+                else:
+                    parent[i, :] = pop[candidate[1], :]
+            elif rank[candidate[0]] > rank[candidate[1]]:
+                parent[i, :] = pop[candidate[0], :]
+            else:
+                parent[i, :] = pop[candidate[1], :]
+
+        return parent
+
+    def find_pos(self, rank, can):
+        for r in rank:
+            for j in r:
+                if j == can:
+                    return r, j
+    # def cross_mutate(self, parent):
+    #     cr_pop = self.cross(parent)
+    #     new_pop = np.vstack((cr_pop, parent))
+    #     mut_pop = self.mutation(parent)
+    #     new_pop = np.vstack((new_pop, mut_pop))
+
+    #     return new_pop
 
     def cross(self, pop):
 
-        p = np.random.rand(pop.shape[0])
-        mating = pop[p < self.prob_c]
-        # shuffle the mating parent
-        np.random.shuffle(mating)
-        # force mat_l to be even to gen couples
-        mat_l = len(mating)
-        if mat_l == 0:
-            return None
-        elif mat_l % 2 != 0:
-            mating = mating[:-1]
-            mat_l -= 1
+        # p = np.random.rand(pop.shape[0])
+        # mating = pop[p < self.prob_c]
+        # # shuffle the mating parent
+        # np.random.shuffle(mating)
+        # # force mat_l to be even to gen couples
+        # mat_l = len(mating)
+        # if mat_l == 0:
+        #     return None
+        # elif mat_l % 2 != 0:
+        #     mating = mating[:-1]
+        #     mat_l -= 1
 
-        cross_pop = np.empty([mat_l, pop.shape[1]])
-        for i in range(mat_l // 2):
+        # cross_pop = np.empty([mat_l, pop.shape[1]])
 
-            parent1 = mating[2 * i]
-            parent2 = mating[2 * i + 1]
+        cross_pop = np.empty(pop.shape)
+        valid = 0
+        for i in range(pop.shape[0] // 2):
 
-            offspring1, offspring2 = self.__single_cross(
-                parent1, parent2, self.x_range)
+            if np.random.random() < self.prob_c:
+                p1 = np.round(len(pop) * np.random.random())
+                p2 = np.round(len(pop) * np.random.random())
+                while p1 == p2:
+                    p2 == np.round(len(pop) * np.random.random())
 
-            cross_pop[2 * i, :] = offspring1
-            cross_pop[2 * i + 1, :] = offspring2
+                parent1 = pop[p1]
+                parent2 = pop[p2]
 
-        return cross_pop
+                offspring1, offspring2 = self.__single_cross(
+                    parent1, parent2, self.x_range)
+
+                cross_pop[2 * valid, :] = offspring1
+                cross_pop[2 * valid + 1, :] = offspring2
+                valid += 1
+
+        return cross_pop[2*valid, :]
 
     def __single_cross(self, parent1, parent2, x_range):
 
@@ -67,7 +109,7 @@ class NSGA_II(object):
         x_up = x_range[1]
 
         offspring1 = np.empty(parent1.shape)
-        offspring2 = np.zeros(parent2.shape)
+        offspring2 = np.empty(parent2.shape)
         for i in range(len(parent1)):
 
             p = np.random.rand()
@@ -135,16 +177,21 @@ class NSGA_II(object):
 
     def mutation(self, pop):
         'TODO:add select the parent'
-        p = np.random.rand(pop.shape[0])
-        mutate = pop[p < self.prob_m]
+        # p = np.random.rand(pop.shape[0])
+        # mutate = pop[p < self.prob_m]
+        l = len(pop)
+        mut_pop = np.empty(pop.shape)
+        valid = 0
+        for i in range(l):
 
-        mut_pop = np.empty(mutate.shape)
-        for i, parent in enumerate(mutate):
+            if np.random.random() < self.prob_m:
+                p = np.round(np.random.random * l)
+                parent = pop[l]
+                offspring = self.__single_mu(parent)
+                mut_pop[i, :] = offspring
+                valid += 1
 
-            offspring = self.__single_mu(parent)
-            mut_pop[i, :] = offspring
-
-        return mut_pop
+        return mut_pop[valid, :]
 
     def __single_mu(self, parent):
         'need modify'
@@ -186,7 +233,7 @@ class NSGA_II(object):
 
     def dis_sort(self, values, dim):
 
-        Usort = self.__fast_Usort(values, dim)
+        Usort, rank = self.__fast_Usort(values, dim)
         rank_num = len(Usort)
         distance = []
         # Usort_idx = []
@@ -195,14 +242,14 @@ class NSGA_II(object):
             dis = self.__cal_Cdis(Usort_num, values[Usort[rn], :], dim)
             distance.append(dis)
 
-        return Usort, distance
+        return Usort, distance, rank
 
     def __fast_Usort(self, values, dim):
 
         num = values.shape[0]
         n_p = np.zeros([num])   # dominate p
         s_p = [[] for i in range(num)]  # be dominated by p
-        # rank = np.zeros([num], dtype=np.int32)
+        rank = np.zeros([num], dtype=np.int32)
         F1 = []
         Usort = []
 
@@ -225,7 +272,7 @@ class NSGA_II(object):
                         n_p[p] += 1  # 支配p的个体，比p值小（求最小值）
 
             if n_p[p] == 0:
-                # rank[p] = 1
+                rank[p] = 1
                 F1.append(p)
 
         Usort.append(F1)
@@ -239,13 +286,13 @@ class NSGA_II(object):
                     n_p[q] -= 1
                     if n_p[q] == 0:
                         # 该个体Pareto级别为当前最高级别加1。此时i初始值为0，所以要加2
-                        # rank[q] = i + 2
+                        rank[q] = i + 2
                         Q.append(q)
 
             Usort.append(Q)
             i += 1
 
-        return Usort[:-1]  # , rank
+        return Usort[:-1], rank
 
     def __cal_Cdis(self, num, values, dim):
         'need test'
