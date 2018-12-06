@@ -9,7 +9,7 @@ from NSGA_II import NSGA_II
 def run(pop, gen, x_range, dim, prob, yita, func):
 
     pop_num = pop.shape[0]
-    NSGA = NSGA_II(gen, pop_num, prob, yita, x_range)
+    NSGA = NSGA_II(pop_num, prob, yita, x_range)
     # values = np.empty((pop_num, dim))
     values = choose_fun(func, var_in=pop)
 
@@ -54,7 +54,7 @@ def find_err(pop, explain):
 
 def init_population(pop_num, func):
 
-    x_range, m = choose_fun(func, infos=True)
+    x_range, m = choose_fun(func, opt='init')
 
     population = np.empty([pop_num, m])
     if len(x_range) == 2:
@@ -78,27 +78,27 @@ def init_population(pop_num, func):
 def visualize(func, pop, dim):
 
     values = choose_fun(func, var_in=pop)
+    fx, best = choose_fun(func, opt='best')
     # print(len(pop))
 
     if dim == 2:
-        plt.scatter(values[:, 0], values[:, 1], color='b', marker='*')
-        fx = np.arange(0, 1, 0.005)
-        v_true = np.multiply(1, 1 - np.sqrt(fx / 1))
-        plt.scatter(fx, v_true, color='r', marker='.')
+        plt.scatter(values[:, 0], values[:, 1], color='g', marker='o')
+
+        plt.scatter(fx, best, color='r', marker='.')
         plt.show()
 
 
 if __name__ == "__main__":
 
-    generation = 100
-    pop_num = 50
+    generation = 150
+    pop_num = 100
 
     prob_c = 0.9
-    prob_m = 0.1
+    prob_m = 0.4
     prob = [prob_c, prob_m]
 
-    yita_c = 10
-    yita_m = 10
+    yita_c = 20
+    yita_m = 20
     yita = [yita_c, yita_m]
 
     func = ['ZDT_1', 'ZDT_2', 'ZDT_3', 'ZDT_4',

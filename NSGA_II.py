@@ -4,7 +4,7 @@ import time
 
 class NSGA_II(object):
 
-    def __init__(self, gen, pop_num, prob, yita, x_range):
+    def __init__(self,  pop_num, prob, yita, x_range):
 
         # the ditribution is narrow when yita_c is largeer
         self.yita_c = yita[0]
@@ -16,16 +16,15 @@ class NSGA_II(object):
         self.x_range = x_range
         self.pop_num = pop_num
 
-    def select(self,pop,Usort,dis,prob):
-        'choose the one to cross'
-        p = np.random.rand([pop.shape[0]])
-        pnum = np.zeros(len(p))
-        pnum[p < prob] = 1
-        num = np.sum(pnum)
-        
+    # def select(self,pop,Usort,dis,prob):
+    #     'choose the one to cross'
+    #     p = np.random.rand([pop.shape[0]])
+    #     pnum = np.zeros(len(p))
+    #     pnum[p < prob] = 1
+    #     num = np.sum(pnum)
+    #     parent = None
+    #     return parent
 
-        parent = None
-        return parent
     def cross_mutate(self, pop):
         cr_pop = self.cross(pop)
         new_pop = np.vstack((cr_pop, pop))
@@ -70,66 +69,62 @@ class NSGA_II(object):
         offspring1 = np.empty(parent1.shape)
         offspring2 = np.zeros(parent2.shape)
         for i in range(len(parent1)):
-            if parent1[i] == parent2[i]:
-                offspring1[i] = parent1[i]
-                offspring2[i] = parent1[i]
-                # print(offspring2[i], i)
+
+            p = np.random.rand()
+            if p <= 0.5:
+                beta = np.power(2 * (p), (1 / (self.yita_c + 1)))
             else:
-                if parent1[i] > parent2[i]:
-                    parent1[i], parent2[i] = parent2[i], parent1[i]
+                beta = np.power(1/(2*(1-p)), (1 / (self.yita_c + 1)))
 
-                if len(self.x_range) == 2:
-                    x_low = self.x_range[0]
-                    x_up = self.x_range[1]
-                else:
-                    if i > 0:
-                        x_low = self.x_range[3]
-                        x_up = self.x_range[4]
+            offspring1[i] = 0.5 * \
+                ((1 + beta) * parent1[i] + (1 - beta) * parent2[i])
+            offspring2[i] = 0.5 * \
+                ((1 - beta) * parent1[i] + (1 + beta) * parent2[i])
+            if offspring1[i] < x_low:
+                offspring1[i] = x_low
+            if offspring1[i] > x_up:
+                offspring1[i] = x_up
+            if offspring2[i] < x_low:
+                offspring2[i] = x_low
+            if offspring2[i] > x_up:
+                offspring2[i] = x_up
+            # if parent1[i] == parent2[i]:
+            #     offspring1[i] = parent1[i]
+            #     offspring2[i] = parent1[i]
+            #     # print(offspring2[i], i)
+            # else:
+            #     if parent1[i] > parent2[i]:
+            #         parent1[i], parent2[i] = parent2[i], parent1[i]
 
-                alpha1 = 2 - np.power(1 + ((2 * (parent1[i] - x_low)) / (parent2[i] - parent1[i])),
-                                      -(self.yita_c + 1))
+            #     if len(self.x_range) == 2:
+            #         x_low = self.x_range[0]
+            #         x_up = self.x_range[1]
+            #     else:
+            #         if i > 0:
+            #             x_low = self.x_range[3]
+            #             x_up = self.x_range[4]
 
-                alpha2 = 2 - np.power(1 + ((2 * (x_up - parent2[i])) / (parent2[i] - parent1[i])),
-                                      -(self.yita_c + 1))
+            #     alpha1 = 2 - np.power(1 + ((2 * (parent1[i] - x_low)) / (parent2[i] - parent1[i])),
+            #                           -(self.yita_c + 1))
 
-                beta1 = self.__get_beta(alpha1)
-                beta2 = self.__get_beta(alpha2)
+            #     alpha2 = 2 - np.power(1 + ((2 * (x_up - parent2[i])) / (parent2[i] - parent1[i])),
+            #                           -(self.yita_c + 1))
 
-                offspring1[i] = 0.5 * (parent1[i] + parent2[i] -
-                                       beta1 * (parent2[i] - parent1[i]))
-                offspring2[i] = 0.5 * (parent1[i] + parent2[i] +
-                                       beta2 * (parent2[i] - parent1[i]))
+            #     beta1 = self.__get_beta(alpha1)
+            #     beta2 = self.__get_beta(alpha2)
 
-                # if offspring1[i] < x_low:
-                #     offspring1[i] = x_low
-                # elif offspring1[i] > x_up:
-                #     offspring1[i] = x_up
-                # if offspring2[i] < x_low:
-                #     offspring2[i] = x_low
-                # elif offspring2[i] > x_up:
-                #     offspring2[i] = x_up
-                # if parent1[i] < x_low or parent1[i] > x_up:
-                #     # if offspring1[i] > x_up*10:
-                #     #print('cross 1 error! %.4f' % offspring1[i])
-                #     print('parent:%.4f,%.4f' % (parent1[i], parent2[i]))
-                #     print('beta:%.4f' % beta1)
-                #     time.sleep(0.1)
-                # if parent2[i] < x_low or parent2[i] > x_up:
-                #     # if offspring2[i] > x_up*10:
-                #     print('cross 2 error! %.4f' % offspring2[i])
-                #     print('parent:%.4f,%.4f' % (parent1[i], parent2[i]))
-                #     print('beta:%.4f' % beta2)
-                #     time.sleep(0.1)
-                # print(offspring2[i], i)
+            #     offspring1[i] = 0.5 * (parent1[i] + parent2[i] -
+            #                            beta1 * (parent2[i] - parent1[i]))
+            #     offspring2[i] = 0.5 * (parent1[i] + parent2[i] +
+            #                            beta2 * (parent2[i] - parent1[i]))
 
-        # print(offspring2)
         return offspring1, offspring2
 
     def __get_beta(self, alpha):
 
         p = np.random.rand()
 
-        if p < 1 / alpha:
+        if p <= 1/alpha:
             beta = np.power(p * alpha, 1 / (self.yita_c + 1))
         else:
             beta = np.power(1 / (2 - p * alpha), 1 / (self.yita_c + 1))
@@ -166,33 +161,26 @@ class NSGA_II(object):
 
             p = np.random.rand()
 
-            # if p <= 0.5:
-            #     delta = np.power(2 * p, 1 / (self.yita_m + 1)) - 1
-            # else:
-            #     delta = 1 - np.power(2 * (1 - p), 1 / (self.yita_m + 1))
-
-            # offspring[i] = parent[i] + delta
-
-            # if offspring[i] < x_low:
-            #     offspring[i] = x_low
-            # elif offspring[i] > x_up:
-            #     offspring[i] = x_up
-
             if p <= 0.5:
-                epsq = np.power(2 * p + (1 - 2 * p) * (1 - (parent[i] - x_low) / (x_up - x_low)),
-                                1 / (self.yita_m + 1)) - 1
+                delta = np.power(2 * p, 1 / (self.yita_m + 1)) - 1
             else:
-                epsq = 1 - np.power(2 * (1 - p) + 2 * (p - 0.5) * (1 - (x_up - parent[i]) / (x_up - x_low)),
-                                    1 / (self.yita_m + 1))
+                delta = 1 - np.power(2 * (1 - p), 1 / (self.yita_m + 1))
 
-            offspring[i] = parent[i] + epsq * (x_up - x_low)
+            offspring[i] = parent[i] + delta
 
-            # if parent[i] < x_low or parent[i] > x_up:
-            #     # if offspring[i] > x_up*10:
-            #     # print('mutate error! %.4f' % offspring[i])
-            #     print('parent:%.4f' % parent[i])
-            #     print('epsq:%.4f' % delta)
-            #     time.sleep(0.1)
+            if offspring[i] < x_low:
+                offspring[i] = x_low
+            elif offspring[i] > x_up:
+                offspring[i] = x_up
+
+            # if p <= 0.5:
+            #     epsq = np.power(2 * p + (1 - 2 * p) * (1 - (parent[i] - x_low) / (x_up - x_low)),
+            #                     1 / (self.yita_m + 1)) - 1
+            # else:
+            #     epsq = 1 - np.power(2 * (1 - p) + 2 * (p - 0.5) * (1 - (x_up - parent[i]) / (x_up - x_low)),
+            #                         1 / (self.yita_m + 1))
+
+            # offspring[i] = parent[i] + epsq * (x_up - x_low)
 
         return offspring
 
