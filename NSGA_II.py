@@ -16,10 +16,16 @@ class NSGA_II(object):
         self.x_range = x_range
         self.pop_num = pop_num
 
-    # def select(self,):
-    #     'choose the one to cross'
-    #     parent = None
-    #     return parent
+    def select(self,pop,Usort,dis,prob):
+        'choose the one to cross'
+        p = np.random.rand([pop.shape[0]])
+        pnum = np.zeros(len(p))
+        pnum[p < prob] = 1
+        num = np.sum(pnum)
+        
+
+        parent = None
+        return parent
     def cross_mutate(self, pop):
         cr_pop = self.cross(pop)
         new_pop = np.vstack((cr_pop, pop))
@@ -160,26 +166,26 @@ class NSGA_II(object):
 
             p = np.random.rand()
 
-            if p <= 0.5:
-                delta = np.power(2 * p, 1 / (self.yita_m + 1)) - 1
-            else:
-                delta = 1 - np.power(2 * (1 - p), 1 / (self.yita_m + 1))
-
-            offspring[i] = parent[i] + delta
-
-            if offspring[i] < x_low:
-                offspring[i] = x_low
-            elif offspring[i] > x_up:
-                offspring[i] = x_up
-
             # if p <= 0.5:
-            #     epsq = np.power(2 * p + (1 - 2 * p) * (1 - (parent[i] - x_low) / (x_up - x_low)),
-            #                     1 / (self.yita_m + 1))-1
+            #     delta = np.power(2 * p, 1 / (self.yita_m + 1)) - 1
             # else:
-            #     epsq = 1 - np.power(2 * (1 - p) + 2 * (p - 0.5) * (1 - (x_up - parent[i]) / (x_up - x_low)),
-            #                         1 / (self.yita_m + 1))
+            #     delta = 1 - np.power(2 * (1 - p), 1 / (self.yita_m + 1))
 
-            # offspring[i] = parent[i] + epsq * (x_up - parent[i])
+            # offspring[i] = parent[i] + delta
+
+            # if offspring[i] < x_low:
+            #     offspring[i] = x_low
+            # elif offspring[i] > x_up:
+            #     offspring[i] = x_up
+
+            if p <= 0.5:
+                epsq = np.power(2 * p + (1 - 2 * p) * (1 - (parent[i] - x_low) / (x_up - x_low)),
+                                1 / (self.yita_m + 1)) - 1
+            else:
+                epsq = 1 - np.power(2 * (1 - p) + 2 * (p - 0.5) * (1 - (x_up - parent[i]) / (x_up - x_low)),
+                                    1 / (self.yita_m + 1))
+
+            offspring[i] = parent[i] + epsq * (x_up - x_low)
 
             # if parent[i] < x_low or parent[i] > x_up:
             #     # if offspring[i] > x_up*10:
@@ -281,32 +287,24 @@ class NSGA_II(object):
         next_pop = np.ones([self.pop_num, new_pop.shape[1]])
 
         for i in range(len(Usort)):
-            num += len(Usort[i])
-            num_debug = num
-            if num > self.pop_num:
+
+            level_num = len(Usort[i])
+            if self.pop_num <= (level_num + num):
+                diff = self.pop_num - num
                 idx = np.argsort(dis[i])
-                diff = num - self.pop_num
                 stay = idx[-diff:]
                 stay_idx = []
                 for s in stay:
                     stay_idx.append(Usort[i][s])
-                num = self.pop_num
                 try:
-                    next_pop[(num - len(stay_idx)):num,
-                             :] = new_pop[stay_idx, :]
+                    next_pop[num:self.pop_num, :] = new_pop[stay_idx, :]
                 except:
-                    print('length:', len(stay_idx))
-                    print('diff:%d\tnum:%d\tpop:%d\tnew:%d' %
-                          (diff, num_debug,  self.pop_num, len(new_pop)))
-                    next_pop[(num - len(stay_idx)):num,
-                             :] = new_pop[stay_idx, :]
-
+                    print('num:%d,stay:%d' % (num, len(stay)))
+                    next_pop[num:self.pop_num, :] = new_pop[stay_idx, :]
                 break
             else:
                 stay_idx = Usort[i]
-                next_pop[(num - len(stay_idx)):num, :] = new_pop[stay_idx, :]
+                next_pop[num:(num + level_num)] = new_pop[stay_idx, :]
+            num += level_num
 
-            # next_pop = np.vstack((next_pop, new_pop[Usort[i], :]))
-
-            # print('stay:', stay_idx)
-        return next_pop  # [1:, :]
+        return next_pop

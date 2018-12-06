@@ -32,17 +32,24 @@ def ZDT_f1(infos, x):
         return x_range, m
     else:
         output = np.empty([len(x), 2])
-        f = x[:, 0]
-        g = 1 + 9 * np.sum(x[:, 1:], 1) / (m - 1)
-        h = 1 - np.sqrt(f / g)
+        # f = x[:, 0]
+        # g = 1 + 9 * np.sum(x[:, 1:], 1) / (m - 1)
+        # h = np.multiply(1 - np.sqrt(f / g), g)
+
+        for i in range(len(x)):
+            output[i, 0] = x[i, 0]
+            g = 1
+            for j in range(1, m):
+                g += 9 * x[i, j] / (m - 1)
+            output[i, 1] = g*(1-np.power(output[i, 0]/g, 0.5))
         # # fx = np.arange(x_range[0], x_range[1], 200)
         # # v_true = 1 - np.sqrt(fx / pof)
         # for i in range(len(x)):
         #     output[i, 0] = x[i, 0]
         #     g = 1 + 9 * np.sum(x[i, 1:]) / (m - 1)
         #     output[i, 1] = 1-np.sqrt(output[i, 0]/g)
-        output[:, 0] = f
-        output[:, 1] = h
+        # output[:, 0] = f
+        # output[:, 1] = h
         # output[:, 2] = v_true
 
         return output

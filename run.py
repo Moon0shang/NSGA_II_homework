@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 from test_func import choose_fun
 from NSGA_II import NSGA_II
@@ -15,17 +16,17 @@ def run(pop, gen, x_range, dim, prob, yita, func):
     Usort, dis = NSGA.dis_sort(values, dim)
     for i in range(gen):
         # selected = NSGA.select()
-        cross_pop = NSGA.cross(pop)
+        # cross_pop = NSGA.cross(pop)
 
-        find_err(cross_pop, 'cross')
+        # find_err(cross_pop, 'cross')
 
-        mut_pop = NSGA.mutation(pop)
+        # mut_pop = NSGA.mutation(pop)
 
-        find_err(mut_pop, 'mutate')
+        # find_err(mut_pop, 'mutate')
 
         new_pop = NSGA.cross_mutate(pop)
 
-        find_err(new_pop, 'stack')
+        find_err(new_pop, 'stack-cross-mutate')
 
         # values = np.empty((pop_num, dim))
         values = choose_fun(func, var_in=new_pop)
@@ -47,6 +48,7 @@ def find_err(pop, explain):
     a1 = np.sum(jug, 1)
     a2 = np.sum(jug)
     if a2 > 0:
+        time.sleep(0.1)
         print('*****************%s errors*************************' % explain)
 
 
@@ -76,6 +78,7 @@ def init_population(pop_num, func):
 def visualize(func, pop, dim):
 
     values = choose_fun(func, var_in=pop)
+    # print(len(pop))
 
     if dim == 2:
         plt.scatter(values[:, 0], values[:, 1], color='b', marker='*')
@@ -87,15 +90,15 @@ def visualize(func, pop, dim):
 
 if __name__ == "__main__":
 
-    generation = 300
-    pop_num = 100
+    generation = 100
+    pop_num = 50
 
     prob_c = 0.9
     prob_m = 0.1
     prob = [prob_c, prob_m]
 
-    yita_c = 20
-    yita_m = 20
+    yita_c = 10
+    yita_m = 10
     yita = [yita_c, yita_m]
 
     func = ['ZDT_1', 'ZDT_2', 'ZDT_3', 'ZDT_4',
