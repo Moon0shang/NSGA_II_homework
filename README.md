@@ -1,5 +1,5 @@
 # NSGA_II_homework
-It's the homework of nature calculating toooooooooooooo
+It's the homework of natural computation toooooooooooooo
 
 requirements:
 * use realnumber coding genetic algorithmn
